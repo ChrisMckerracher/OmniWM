@@ -14,10 +14,25 @@ Local desktop options (set in the app's launch environment):
   OmniWM's workspace bar reserves space at the top.
 
 Without these options the fork uses upstream behavior. Disabling masks can expose
-slivers of parked windows at screen edges. Formatting and lint checks pass (lint reports two existing upstream warnings).
-Building is currently blocked by missing Xcode 27 compiler plugins in the
-standalone Command Line Tools; the app is not yet built or installed.
-Only the dependencies pinned by this checkout were downloaded and verified.
+slivers of parked windows at screen edges. Installed at `/Applications/OmniWM.app` on 2026-10-10. Its `LSEnvironment`
+and `~/.local/libexec/desktop-services/OmniWM Startup` enable both options.
+Existing settings and CLI paths are retained; upstream update checks are disabled.
+The app is locally ad-hoc signed and requires macOS permission approval after
+replacing the Developer ID-signed release.
+
+Built with Apple-signed Xcode 27.1 RC (27A9275), Swift 6.4. Only the third-party
+dependencies pinned by this checkout were downloaded and checksum-verified.
+`make verify` passes, with two pre-existing nonfatal lint warnings. The 37
+`GapSettingsTests` and `ParkingEdgeMaskTests` pass. The serial suite ran 5,150
+tests: 35 skipped and one failure in unchanged upstream
+`OverviewDragPreviewTests.testGhostPreservesDragGeometryAndRegistersExcludedPassthroughPanel`;
+the test expects x=1210 while screen clamping produces x=1070 on the 1470-point
+display. Logs are in `.cache/verify.log`, `.cache/tests.log`, and
+`.cache/regression-tests.log`.
+
+The original app, settings, startup script and launch agent are backed up in
+`~/.local/state/omniwm-local-backup-20261010-092132`.
+Runtime visual confirmation is pending permission approval.
 
 OmniWM is a free, open-source, Developer ID-signed and Apple-notarized tiling window manager for Apple Silicon Macs running macOS 26 or later. It combines Niri-style orientation-aware scrolling containers and Hyprland-style Dwindle BSP layouts, selectable per workspace, with multi-monitor routing and optional local CLI/IPC automation.
 
