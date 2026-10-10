@@ -36,7 +36,15 @@ The original app, settings, startup script and launch agent are backed up in
 `~/.local/state/omniwm-local-backup-20261010-092132`.
 Homebrew cask ownership was removed on 2026-10-10; the local app and CLI link
 were retained. The startup LaunchAgent opens the self-managed build.
-The updated off-screen parking behavior is awaiting runtime verification.
+The updated off-screen parking build is installed (source commit `4062ceb`),
+but macOS permission approval is required again before runtime verification.
+Its `make verify` passed and all 43 selected gap, parking and mask tests passed
+(`.cache/regression-parking.log`). The full serial rerun encountered the same
+upstream Overview assertion and later stalled in unchanged
+`WindowFocusDispatcherTests.testDrainWaitsForQueuedFocusBeforeSynchronousWork`;
+a sample showed 64 blocked dispatch threads and the test process was stopped.
+See `.cache/tests-parking.log` and `.cache/test-stall.txt`.
+The preceding local app is preserved in `.cache/OmniWM-before-parking.app`.
 
 OmniWM is a free, open-source, Developer ID-signed and Apple-notarized tiling window manager for Apple Silicon Macs running macOS 26 or later. It combines Niri-style orientation-aware scrolling containers and Hyprland-style Dwindle BSP layouts, selectable per workspace, with multi-monitor routing and optional local CLI/IPC automation.
 
