@@ -38,6 +38,8 @@ enum WindowAdmissionTestSupport {
             ownedWindowRegistry: ownedWindowRegistry
         )
         let handler = controller.axEventHandler
+        // Synthetic test applications remain alive unless a test explicitly ends them.
+        handler.applicationIsTerminatedProvider = { _ in false }
         handler.lifecycleQueries.query = { [weak handler] in handler?.windowInfoProvider($0) }
         return controller
     }

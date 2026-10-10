@@ -18,6 +18,13 @@ Local app launch options, enabled by this fork's `Info.plist` and startup script
 Parking desktops are ordinary macOS desktops: Mission Control and desktop swipes
 can expose them. They cannot currently be excluded from native navigation.
 Native fullscreen and manually minimized windows retain their native state.
+Closing or quitting the last application on an active workspace keeps that workspace
+selected and hands native focus to OmniWM. Pending activation results from the
+closing application cannot route focus to another workspace; later deliberate
+workspace and application selections still work. This applies to both layouts.
+The local macOS setup also disables automatic native Space switching with
+`defaults write -g AppleSpacesSwitchOnActivate -bool false`, preventing app fallback
+activation from automatically following a window into its parking desktop.
 Recovery uses ownership markers, desktop UUIDs, window PID/ID, boot identity and
 an atomic journal at `~/.local/state/omniwm-native-parking.json`. Do not delete that
 journal while windows are parked. Stop/restart restores memberships; startup also

@@ -7,6 +7,89 @@ import XCTest
 
 @MainActor
 final class NativeAppHideTests: XCTestCase {
+    func testLastWindowCloseKeepsCurrentEmptyWorkspaceInBothLayouts() throws {
+        for layout: LayoutType in [.niri, .dwindle] {
+            let fixture = try Fixture(layout: layout)
+            defer { fixture.stop() }
+            fixture.controller.axEventHandler.handleRemoved(token: fixture.hidden)
+            fixture.frontmostPID = fixture.other.pid
+            fixture.send(.activated(pid: fixture.other.pid))
+            fixture.drain()
+            fixture.assertStayed()
+            XCTAssertEqual(fixture.activatedPIDs, [getpid()])
+            XCTAssertTrue(fixture.requestedPIDs.isEmpty)
+            fixture.acknowledgeHandoff()
+            fixture.frontmostPID = fixture.other.pid
+            fixture.send(.activated(pid: fixture.other.pid))
+            fixture.drain()
+            fixture.assertOtherFocused()
+        }
+    }
+
+    func testLastAppQuitKeepsCurrentEmptyWorkspaceInBothLayouts() throws {
+        for layout: LayoutType in [.niri, .dwindle] {
+            let fixture = try Fixture(layout: layout)
+            defer { fixture.stop() }
+            fixture.controller.axEventHandler.handleAppTerminated(
+                pid: fixture.hidden.pid,
+                frontmostPID: fixture.other.pid
+            )
+            fixture.frontmostPID = fixture.other.pid
+            fixture.send(.activated(pid: fixture.other.pid))
+            fixture.drain()
+            fixture.assertStayed()
+            XCTAssertEqual(fixture.activatedPIDs, [getpid()])
+            XCTAssertTrue(fixture.requestedPIDs.isEmpty)
+        }
+    }
+
+    func testActivationBeforeLastAppQuitKeepsCurrentEmptyWorkspaceInBothLayouts() throws {
+        for layout: LayoutType in [.niri, .dwindle] {
+            let fixture = try Fixture(layout: layout)
+            defer { fixture.stop() }
+            fixture.controller.axEventHandler.applicationIsTerminatedProvider = { $0 == fixture.hidden.pid }
+            fixture.frontmostPID = fixture.other.pid
+            fixture.send(.activated(pid: fixture.other.pid))
+            fixture.send(.terminated(pid: fixture.hidden.pid, frontmostPID: fixture.other.pid))
+            fixture.drain()
+            fixture.assertStayed()
+            XCTAssertEqual(fixture.activatedPIDs, [getpid()])
+            XCTAssertTrue(fixture.requestedPIDs.isEmpty)
+        }
+    }
+
+    func testAppQuitDuringActivationLookupKeepsCurrentWorkspace() throws {
+        let fixture = try Fixture()
+        defer { fixture.stop() }
+        fixture.frontmostPID = fixture.other.pid
+        XCTAssertTrue(fixture.controller.axEventHandler.handleAppActivation(pid: fixture.other.pid))
+        fixture.controller.axEventHandler.applicationIsTerminatedProvider = { $0 == fixture.hidden.pid }
+        fixture.drain()
+        fixture.drain()
+        fixture.assertStayed()
+        XCTAssertEqual(fixture.activatedPIDs, [getpid()])
+    }
+
+    func testPendingActivationFactsCannotLeaveWorkspaceAfterLastAppQuits() throws {
+        let fixture = try Fixture()
+        defer { fixture.stop() }
+        fixture.frontmostPID = fixture.other.pid
+        XCTAssertTrue(fixture.controller.axEventHandler.handleAppActivation(pid: fixture.other.pid))
+        fixture.controller.axEventHandler.handleAppTerminated(pid: fixture.hidden.pid, frontmostPID: fixture.other.pid)
+        fixture.drain()
+        fixture.drain()
+        fixture.assertStayed()
+        XCTAssertEqual(fixture.activatedPIDs, [getpid()])
+    }
+
+    func testClosingWindowOnInactiveWorkspaceDoesNotStealFocus() throws {
+        let fixture = try Fixture()
+        defer { fixture.stop() }
+        fixture.controller.axEventHandler.handleRemoved(token: fixture.other)
+        XCTAssertTrue(fixture.activatedPIDs.isEmpty)
+        XCTAssertEqual(fixture.controller.workspaceManager.nativeManagedFocusToken, fixture.hidden)
+    }
+
     func testActivationBeforeHideInvalidatesFallbackFactsInBothLayouts() throws {
         for layout: LayoutType in [.niri, .dwindle] {
             let fixture = try Fixture(layout: layout)

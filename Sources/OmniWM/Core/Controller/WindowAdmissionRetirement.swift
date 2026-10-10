@@ -34,6 +34,7 @@ extension AXEventHandler {
             .map { controller.settings.workspaces.layoutType(for: $0.name) } ?? .defaultLayout
         let ownsLiveFocus = controller.workspaceManager.nativeManagedFocusToken == token
             || controller.workspaceManager.externalFocusToken == token
+            || provisionalActivationSourceToken == token
         let removesScratchpadResources = controller.workspaceManager.isScratchpadToken(token)
             || controller.workspaceManager.hiddenState(for: token)?.isScratchpad == true
         let policy = retirementPolicy(for: reason)
@@ -51,6 +52,9 @@ extension AXEventHandler {
         prepareRetirementFocus(entry, policy: policy, ownsLiveFocus: ownsLiveFocus, controller: controller)
         controller.mouseEventHandler.discardNativeTitleBarDrag(for: token)
         _ = controller.workspaceManager.removeWindow(pid: token.pid, windowId: token.windowId)
+        if case .destroyed = reason, ownsLiveFocus || policy.shouldRecoverFocus {
+            retainEmptyWorkspaceAfterClose(workspaceId)
+        }
         noteManagedWindowSubscriptionIdentityChanged()
         finishDeferredReplacementAfterTracking(windowId: token.windowId)
         controller.axManager.removeWindowState(pid: token.pid, expectedWindow: entry.axRef)

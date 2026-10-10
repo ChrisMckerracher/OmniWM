@@ -47,7 +47,7 @@ extension AXEventHandler {
         let focusedToken = recordProvisionalAppActivation(
             pid: pid,
             source: source,
-            origin: origin,
+            origin: origin, observationGeneration: observationGeneration,
             controller: controller
         )
 
@@ -94,6 +94,7 @@ extension AXEventHandler {
         pid: pid_t,
         source: ActivationEventSource,
         origin: ActivationCallOrigin,
+        observationGeneration: UInt64,
         controller: WMController
     ) -> WindowToken? {
         let activeRequest = controller.intentLedger.activeManagedRequest
@@ -108,6 +109,12 @@ extension AXEventHandler {
                     matching: activeRequest.token,
                     workspaceId: activeRequest.workspaceId
                 )
+            }
+            let sourceToken = focusedToken ?? provisionalActivationSource.flatMap {
+                $0.targetPID == pid ? $0.token : nil
+            }
+            provisionalActivationSource = sourceToken.map {
+                .init(token: $0, generation: observationGeneration, targetPID: pid)
             }
             _ = controller.workspaceManager.recordExternalFocus(pid: pid, windowId: nil)
             controller.surfaceReconciler.noteRestackOccurred()
