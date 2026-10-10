@@ -25,8 +25,7 @@ extension AXEventHandler {
         defer { rescanAppThatLostFocus() }
         guard let controller, controller.hasStartedServices else { return }
         guard isCurrentActivationFacts(facts, controller: controller) else { return }
-        defer { clearProvisionalActivationSource(matching: facts.observationGeneration) }
-        if interceptsAppTerminationFallback(facts) { return }
+
         let pid = facts.pid
         let axRef = facts.focusedWindow?.axRef
         let observedToken = axRef.map { canonicalObservedWindowToken(pid: pid, axRef: $0) }
@@ -66,13 +65,6 @@ extension AXEventHandler {
         }
 
         handleUnmanagedActivationFacts(observation, requestDisposition: requestDisposition, controller: controller)
-    }
-
-    private func interceptsAppTerminationFallback(_ facts: ActivationFacts) -> Bool {
-        handleAppTerminationFocusActivation(
-            pid: facts.pid, source: facts.source, origin: facts.origin,
-            callbackGeneration: facts.callbackGeneration
-        )
     }
 
     private func handleAbsentActivationWindow(

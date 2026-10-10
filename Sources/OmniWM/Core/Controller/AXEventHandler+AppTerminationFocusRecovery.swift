@@ -41,7 +41,6 @@ extension AXEventHandler {
         callbackGeneration: UInt64?
     ) -> Bool {
         guard origin == .external, let controller else { return false }
-        if handleLastAppQuitFallback(pid: pid, controller: controller) { return true }
 
         if let open = controller.intentLedger.openAppTerminationFocusRecovery() {
             return handleExistingAppTerminationFocusActivation(pid: pid, open: open, controller: controller)
@@ -181,21 +180,6 @@ extension AXEventHandler {
 
     func preservesAppTerminationRecoveryViewport(for token: WindowToken) -> Bool {
         controller?.intentLedger.openAppTerminationFocusRecovery()?.payload.preferredTiledToken == token
-    }
-
-    private func handleLastAppQuitFallback(pid: pid_t, controller: WMController) -> Bool {
-        guard let departing = controller.workspaceManager.nativeManagedFocusToken ?? provisionalActivationSourceToken,
-              departing.pid != pid,
-              !hasExplicitFocusIntent(forPID: pid),
-              controller.intentLedger.activeManagedRequest == nil,
-              let entry = controller.workspaceManager.entry(for: departing),
-              let monitorId = controller.workspaceManager.monitorId(for: entry.workspaceId),
-              controller.workspaceManager.activeWorkspace(on: monitorId)?.id == entry.workspaceId,
-              controller.workspaceManager.entries(in: entry.workspaceId).allSatisfy({ $0.pid == departing.pid }),
-              applicationIsTerminatedProvider(departing.pid)
-        else { return false }
-        handleAppTerminated(pid: departing.pid, frontmostPID: pid)
-        return true
     }
 
     private func hasExplicitFocusIntent(forPID pid: pid_t) -> Bool {

@@ -30,7 +30,6 @@ final class AXEventHandler {
     private var nextActivationObservationGeneration: UInt64 = 1
     private var latestActivationObservationGeneration: UInt64 = 0
     var latestNativeActivationPID: pid_t?
-    var provisionalActivationSource: ProvisionalActivationSource?
     var terminalFrameFailureStateByWindowId: [Int: TerminalFrameFailureState] = [:]
     var admissionQuarantineByWindowId: [Int: AdmissionQuarantine] = [:]
     var identityAliasesByWindowId: [Int: WindowIdentityAliasHistory] = [:]
@@ -284,13 +283,19 @@ extension AXEventHandler {
         return latestActivationObservationGeneration
     }
 
-    func isActivationObservationGenerationCurrent(_ generation: UInt64) -> Bool {
-        generation == latestActivationObservationGeneration
-    }
-
     func invalidateActivationObservations() {
         latestActivationObservationGeneration = nextActivationObservationGeneration
         nextActivationObservationGeneration &+= 1
+    }
+
+    func isCurrentFocusedAdmissionContinuation(
+        _ continuation: FocusedAdmissionRetryContinuation
+    ) -> Bool {
+        guard continuation.observationGeneration == latestActivationObservationGeneration else {
+            return false
+        }
+        guard let callbackGeneration = continuation.callbackGeneration else { return true }
+        return AppAXContextRegistry.contexts[continuation.token.pid]?.callbackGeneration == callbackGeneration
     }
 
     func awaitPendingManagedReplacementBursts(for appPIDs: Set<pid_t>? = nil) async {

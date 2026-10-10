@@ -18,10 +18,11 @@ Local app launch options, enabled by this fork's `Info.plist` and startup script
 Parking desktops are ordinary macOS desktops: Mission Control and desktop swipes
 can expose them. They cannot currently be excluded from native navigation.
 Native fullscreen and manually minimized windows retain their native state.
-Closing or quitting the last application on an active workspace keeps that workspace
-selected and hands native focus to OmniWM. Pending activation results from the
-closing application cannot route focus to another workspace; later deliberate
-workspace and application selections still work. This applies to both layouts.
+Closing or quitting the last window on an active workspace uses the normal workspace
+switch command to select the next occupied workspace on the same monitor, wrapping
+around and skipping empty workspaces. If none remain, it leaves the current workspace
+selected. Manually selecting an empty workspace still works. Both layouts use this
+behavior; closing a window on an inactive workspace does not change the selection.
 macOS can still select the parking desktop when the last foreground app quits,
 even with `AppleSpacesSwitchOnActivate` disabled. Native parking reconciles that
 selection per display by showing a normal desktop, selecting it, and hiding the

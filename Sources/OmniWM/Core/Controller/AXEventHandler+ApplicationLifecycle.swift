@@ -8,7 +8,6 @@ extension AXEventHandler {
     func handleAppTerminated(pid: pid_t, frontmostPID: pid_t? = nil) {
         guard let controller else { return }
         let allEntries = controller.workspaceManager.allEntries()
-        let departingWorkspace = departingWorkspace(for: pid, controller: controller)
         if !allEntries.contains(where: { $0.pid == pid }),
            let recovery = controller.intentLedger.openAppTerminationFocusRecovery()?.payload,
            recovery.departingToken.pid == pid,
@@ -33,7 +32,9 @@ extension AXEventHandler {
         let removedEntries = allEntries.filter { $0.pid == pid }
         let scratchpadTokens = scratchpadTokens(in: removedEntries, manager: controller.workspaceManager)
         let affectedWorkspaces = controller.workspaceManager.removeWindowsForApp(pid: pid)
-        retainEmptyWorkspaceAfterClose(departingWorkspace)
+        for workspaceId in affectedWorkspaces {
+            switchFromEmptyWorkspaceAfterClose(workspaceId)
+        }
         if !removedEntries.isEmpty {
             controller.axEventHandler.noteManagedWindowSubscriptionIdentityChanged()
         }

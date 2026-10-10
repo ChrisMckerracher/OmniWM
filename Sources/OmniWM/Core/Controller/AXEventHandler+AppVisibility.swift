@@ -122,24 +122,6 @@ extension AXEventHandler {
         return true
     }
 
-    @discardableResult
-    func retainEmptyWorkspaceAfterClose(_ workspaceId: WorkspaceDescriptor.ID?) -> Bool {
-        guard let workspaceId, let controller, controller.hasStartedServices,
-              let monitorId = controller.workspaceManager.monitorId(for: workspaceId),
-              controller.workspaceManager.activeWorkspace(on: monitorId)?.id == workspaceId,
-              controller.workspaceManager.entries(in: workspaceId).isEmpty,
-              controller.intentLedger.activeManagedRequest == nil,
-              !controller.hasFrontmostOwnedWindow
-        else { return false }
-        invalidateActivationObservations()
-        provisionalActivationSource = nil
-        _ = controller.resolveAndSetWorkspaceFocusToken(for: workspaceId)
-        let intent = controller.intentLedger.registerActivateApp(pid: getpid())
-        controller.deadlineWheel.schedule(intentId: intent.id, after: IntentLedger.activationSettleDeadline)
-        controller.workspaceNavigationHandler.clearManagedFocusAfterEmptyWorkspaceSwitch()
-        return true
-    }
-
     func suppressesActivationDuringAppHideHandoff(
         pid: pid_t,
         source: ActivationEventSource,
