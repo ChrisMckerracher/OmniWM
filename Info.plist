@@ -2,6 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>LSEnvironment</key>
+    <dict>
+        <key>OMNIWM_NATIVE_WINDOW_PARKING</key>
+        <string>1</string>
+        <key>OMNIWM_HIDE_EDGE_MASKS</key>
+        <string>1</string>
+        <key>OMNIWM_FULLSCREEN_TOP_EXTENSION</key>
+        <string>1</string>
+    </dict>
 	<key>CFBundleDisplayName</key>
 	<string>OmniWM</string>
 	<key>CFBundleDevelopmentRegion</key>

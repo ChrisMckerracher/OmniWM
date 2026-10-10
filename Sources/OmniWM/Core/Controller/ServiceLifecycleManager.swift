@@ -109,6 +109,7 @@ final class ServiceLifecycleManager {
         {
             controller.syncMonitorsToNiriEngine()
         }
+        controller.nativeWindowParking.start()
         controller.hasStartedServices = true
         controller.updateWorkspaceBarNotificationBadgeSettings()
         controller.reconcileEnabledAndHotkeysState()
@@ -290,6 +291,7 @@ final class ServiceLifecycleManager {
         {
             controller.cancelManagedFocusRequestAndRestoreSource(request)
         }
+        controller.nativeWindowParking.stop()
         controller.hasStartedServices = false
         controller.updateWorkspaceBarNotificationBadgeSettings()
         controller.invalidateOverviewDeferredActionsForServiceStop()

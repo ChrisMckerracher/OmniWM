@@ -72,6 +72,7 @@ struct MonitorConfigurationHandler {
 
         let topologyChanged = controller.workspaceManager.monitors != currentMonitors
         controller.workspaceManager.applyMonitorConfigurationChange(currentMonitors)
+        controller.nativeWindowParking.reconcile()
         controller.resetMouseWarpTransientState()
         controller.syncMouseWarpPolicy(for: controller.workspaceManager.monitors)
         if topologyChanged {

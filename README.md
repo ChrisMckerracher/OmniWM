@@ -4,47 +4,44 @@ This local fork is managed in `~/Code/OmniWM`, on branch `chris/desktop-fixes`,
 based on upstream `v0.7.6` (`3c0783954604eaa9110d0bdb61fa29f953e738ee`).
 The remote `upstream` points to the original project.
 
-Local desktop options (set in the app's launch environment):
+Local app launch options, enabled by this fork's `Info.plist` and startup script:
 
-- `OMNIWM_HIDE_EDGE_MASKS=1` prevents the black one-point edge masks from being created
-  and requests hidden-window parking 32 points beyond either edge, clearing slivers
-  and shadows when macOS honors the requested placement.
+- `OMNIWM_NATIVE_WINDOW_PARKING=1` hides inactive OmniWM workspace windows in an
+  owned native desktop per physical monitor, through Apple's window-management
+  bridge. It does not minimize applications or inject into Dock. Displays are
+  identified by UUID; reconnects and workspace migration are reconciled automatically.
+- `OMNIWM_HIDE_EDGE_MASKS=1` removes both black edge masks. The old 32-point
+  offscreen offset is removed because macOS clamps Zen and Claude back onscreen.
 - `OMNIWM_FULLSCREEN_TOP_EXTENSION=1` extends gapless layout fullscreen upward
-  by one point, closing the seam between macOS's 33-point reservation and the
-  32-point custom bar. The bottom stays fixed; ordinary tiling is unaffected.
-  The extension is capped at the physical display edge and is skipped when
-  OmniWM's workspace bar reserves space at the top.
+  one point, capped at the physical display edge, closing the custom-bar seam.
 
-Without these options the fork uses upstream behavior. Disabling masks can expose
-slivers of parked windows at screen edges. Installed at `/Applications/OmniWM.app` on 2026-10-10. Its `LSEnvironment`
-and `~/.local/libexec/desktop-services/OmniWM Startup` enable both options.
-Existing settings and CLI paths are retained; upstream update checks are disabled.
-The app is locally ad-hoc signed and requires macOS permission approval after
-replacing the Developer ID-signed release.
+Parking desktops are ordinary macOS desktops: Mission Control and desktop swipes
+can expose them. They cannot currently be excluded from native navigation.
+Native fullscreen and manually minimized windows retain their native state.
+Recovery uses ownership markers, desktop UUIDs, window PID/ID, boot identity and
+an atomic journal at `~/.local/state/omniwm-native-parking.json`. Do not delete that
+journal while windows are parked. Stop/restart restores memberships; startup also
+recovers windows left in an owned parking desktop after an interrupted process.
+A remaining monitor receives windows whose original monitor was disconnected.
+Multi-monitor routing is covered by policy tests; physical hot-plug verification
+requires a second attached display and has not yet been performed.
 
-Built with Apple-signed Xcode 27.1 RC (27A9275), Swift 6.4. Only the third-party
-dependencies pinned by this checkout were downloaded and checksum-verified.
-`make verify` passes, with two pre-existing nonfatal lint warnings. The 37
-`GapSettingsTests` and `ParkingEdgeMaskTests` pass. The serial suite ran 5,150
-tests: 35 skipped and one failure in unchanged upstream
-`OverviewDragPreviewTests.testGhostPreservesDragGeometryAndRegistersExcludedPassthroughPanel`;
-the test expects x=1210 while screen clamping produces x=1070 on the 1470-point
-display. Logs are in `.cache/verify.log`, `.cache/tests.log`, and
-`.cache/regression-tests.log`.
-
-The original app, settings, startup script and launch agent are backed up in
+The app is self-managed at `/Applications/OmniWM.app`. Homebrew cask ownership was
+removed; the CLI symlink and `local.chris.omniwm` LaunchAgent remain in use.
+Upstream update checks are disabled and existing settings are retained.
+The previous app and startup script are preserved in
+`.cache/OmniWM-before-native-parking.app` and `.cache/OmniWM-Startup-before-native-parking`.
+The original release and configuration backup is
 `~/.local/state/omniwm-local-backup-20261010-092132`.
-Homebrew cask ownership was removed on 2026-10-10; the local app and CLI link
-were retained. The startup LaunchAgent opens the self-managed build.
-The updated off-screen parking build is installed (source commit `4062ceb`),
-but macOS permission approval is required again before runtime verification.
-Its `make verify` passed and all 43 selected gap, parking and mask tests passed
-(`.cache/regression-parking.log`). The full serial rerun encountered the same
-upstream Overview assertion and later stalled in unchanged
-`WindowFocusDispatcherTests.testDrainWaitsForQueuedFocusBeforeSynchronousWork`;
-a sample showed 64 blocked dispatch threads and the test process was stopped.
-See `.cache/tests-parking.log` and `.cache/test-stall.txt`.
-The preceding local app is preserved in `.cache/OmniWM-before-parking.app`.
+
+Built using the already installed Apple-signed Xcode 27.1 RC (27A9275), Swift 6.4,
+and the checkout's existing pinned dependencies. No new downloads are required.
+The local app is ad-hoc signed; macOS may require permission approval after rebuilding.
+`make verify` passes with the two existing upstream lint warnings. Selected parking,
+geometry, topology, lifecycle and recovery tests pass; logs are in
+`.cache/native-parking-tests.log` and `.cache/native-parking-verify.log`.
+The full upstream suite previously encountered an unchanged Overview screen-size
+assertion and a queued-focus test stall; it is not claimed to pass.
 
 OmniWM is a free, open-source, Developer ID-signed and Apple-notarized tiling window manager for Apple Silicon Macs running macOS 26 or later. It combines Niri-style orientation-aware scrolling containers and Hyprland-style Dwindle BSP layouts, selectable per workspace, with multi-monitor routing and optional local CLI/IPC automation.
 

@@ -161,6 +161,9 @@ final class WMController {
     @ObservationIgnored
     private(set) lazy var placementResolver = PlacementResolver(workspaceManager: workspaceManager)
     @ObservationIgnored
+    private(set) lazy var nativeWindowParking = NativeWindowParking(controller: self)
+
+    @ObservationIgnored
     private(set) lazy var spaceTracker = SpaceTracker(controller: self)
     @ObservationIgnored
     private(set) lazy var commandHandler = CommandHandler(controller: self)

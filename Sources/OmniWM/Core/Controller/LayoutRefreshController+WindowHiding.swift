@@ -151,6 +151,16 @@ extension LayoutRefreshController {
     ) -> Bool {
         guard let controller else { return false }
         let frameEntry = (pid: entry.pid, windowId: entry.windowId)
+        if case .workspaceInactive = reason,
+           controller.nativeWindowParking.park(entry, monitor: monitor)
+        {
+            let frame = observedFrame ?? fastFrame(for: entry.token, axRef: entry.axRef) ?? monitor.visibleFrame
+            controller.workspaceManager.setHiddenState(updatedHiddenState(
+                for: entry, frame: frame, monitor: monitor,
+                policy: .init(side: side, reason: reason, preserveWorkspaceInactive: true)
+            ), for: entry.token)
+            return true
+        }
         switch resolveHideOperation(
             for: entry,
             monitor: monitor,

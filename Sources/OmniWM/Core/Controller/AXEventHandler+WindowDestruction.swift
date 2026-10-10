@@ -95,19 +95,11 @@ extension AXEventHandler {
         let resolvedToken = trackedToken
             ?? identityResolution.token
             ?? pidHint.map { WindowToken(pid: $0, windowId: Int(windowId)) }
-        WindowAdmissionTrace.record(
-            .init(
-                action: .admissionDestroyed,
-                pid: resolvedToken?.pid ?? pidHint,
-                windowId: Int(windowId),
-                bundleId: resolvedToken.flatMap { resolveBundleId($0.pid) },
-                reason: resolvedToken == nil ? "unresolved_identity" : "resolved_identity",
-                callbackGeneration: callbackGeneration,
-                axRef: resolvedToken.flatMap {
-                    controller?.workspaceManager.entry(for: $0)?.axRef
-                }
-            )
+        recordDestroyedWindowTrace(
+            resolvedToken: resolvedToken, pidHint: pidHint, windowId: windowId, callbackGeneration: callbackGeneration
         )
+
+        if shouldIgnoreNativeParkingDestroy(trackedToken) { return }
 
         guard let candidate = prepareDestroyCandidate(
             windowInfo: windowInfo,
@@ -139,6 +131,28 @@ extension AXEventHandler {
         }
 
         processPreparedDestroy(candidate)
+    }
+
+    private func recordDestroyedWindowTrace(
+        resolvedToken: WindowToken?, pidHint: pid_t?, windowId: UInt32, callbackGeneration: UInt64?
+    ) {
+        WindowAdmissionTrace.record(
+            .init(
+                action: .admissionDestroyed,
+                pid: resolvedToken?.pid ?? pidHint,
+                windowId: Int(windowId),
+                bundleId: resolvedToken.flatMap { resolveBundleId($0.pid) },
+                reason: resolvedToken == nil ? "unresolved_identity" : "resolved_identity",
+                callbackGeneration: callbackGeneration,
+                axRef: resolvedToken.flatMap {
+                    controller?.workspaceManager.entry(for: $0)?.axRef
+                }
+            )
+        )
+    }
+
+    private func shouldIgnoreNativeParkingDestroy(_ token: WindowToken?) -> Bool {
+        token.map { controller?.nativeWindowParking.keepsAlive($0) == true } ?? false
     }
 
     private struct UnmanagedWindowDestruction {

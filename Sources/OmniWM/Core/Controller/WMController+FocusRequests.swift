@@ -13,7 +13,18 @@ extension WMController {
         defersRetryRaise: Bool = false,
         requiresWorkerRaise: Bool = false
     ) -> ManagedFocusRequest? {
+        nativeWindowParking.cancelDeferredFocus()
         guard let entry = focusableEntry(for: token, origin: origin) else { return nil }
+        if !nativeWindowParking.reveal(token, monitor: workspaceManager.monitor(for: entry.workspaceId)) {
+            if let previous = intentLedger.activeManagedRequest { _ = cancelManagedFocusRequest(previous) }
+            nativeWindowParking.deferFocus(token) { [weak self] in
+                self?.focusWindow(
+                    token, origin: origin, raisesWindow: raisesWindow,
+                    defersRetryRaise: defersRetryRaise, requiresWorkerRaise: requiresWorkerRaise
+                )
+            }
+            return nil
+        }
         let handoff = prepareFocusHandoff(for: token)
         let requiresWorkerRaise = requiresWorkerRaise && !raisesWindow
         let request = publishManagedFocusRequest(

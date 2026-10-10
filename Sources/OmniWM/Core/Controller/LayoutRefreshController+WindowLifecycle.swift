@@ -159,6 +159,7 @@ extension LayoutRefreshController {
                     && !nativeFullscreenRetirementKeys.contains(entry.token)
             )
                 || workspaceManager.spaceTopology.isWindowOnKnownInactiveSpace(entry.windowId)
+                || controller?.nativeWindowParking.keepsAlive(entry.token) == true
             {
                 layoutState.consecutiveMissCountByHandle.removeValue(forKey: handle)
                 continue

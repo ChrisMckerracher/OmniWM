@@ -84,7 +84,7 @@ struct HiddenWindowPlacementResolver {
         baseReveal: CGFloat,
         hideEdgeMasks: Bool = ProcessInfo.processInfo.environment["OMNIWM_HIDE_EDGE_MASKS"] == "1"
     ) -> CGFloat {
-        if hideEdgeMasks, baseReveal > 0 { return -32 }
+        if hideEdgeMasks, baseReveal > 0 { return 1 }
         return baseReveal > 0 ? 1 : 0
     }
 

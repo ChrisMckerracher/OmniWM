@@ -24,7 +24,8 @@ extension ServiceLifecycleManager {
         guard let controller else { return [] }
         let manager = controller.workspaceManager
         return manager.allEntries().compactMap { entry in
-            guard !entry.observedState.isNativeWithdrawn,
+            guard !controller.nativeWindowParking.contains(entry.token),
+                  !entry.observedState.isNativeWithdrawn,
                   entry.layoutReason != .nativeFullscreen,
                   manager.nativeFullscreenRecord(for: entry.token) == nil,
                   !manager.spaceTopology.isWindowOnFullscreenSpace(entry.windowId),

@@ -221,7 +221,9 @@ final class SpaceTracker {
             for entry in controller.workspaceManager.allEntries() {
                 let windowId = entry.windowId
                 guard windowId > 0 else { continue }
-                let candidates = spaceIdsForWindow(UInt32(windowId))
+                let candidates = controller.nativeWindowParking.logicalSpaces(
+                    for: entry.token, actual: spaceIdsForWindow(UInt32(windowId))
+                )
                 if let spaceId = topology.selectWindowSpace(from: candidates) {
                     topology.windowSpace[windowId] = spaceId
                 } else if preservesKnownOnMissing,
