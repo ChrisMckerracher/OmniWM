@@ -99,7 +99,10 @@ extension AXEventHandler {
             resolvedToken: resolvedToken, pidHint: pidHint, windowId: windowId, callbackGeneration: callbackGeneration
         )
 
-        if shouldIgnoreNativeParkingDestroy(trackedToken) { return }
+        if shouldIgnoreNativeParkingDestroy(trackedToken, evidence: evidence) { return }
+        if evidence == .windowClosed, let trackedToken {
+            controller?.nativeWindowParking.forgetClosedWindow(trackedToken)
+        }
 
         guard let candidate = prepareDestroyCandidate(
             windowInfo: windowInfo,
@@ -151,8 +154,13 @@ extension AXEventHandler {
         )
     }
 
-    private func shouldIgnoreNativeParkingDestroy(_ token: WindowToken?) -> Bool {
-        token.map { controller?.nativeWindowParking.keepsAlive($0) == true } ?? false
+    private func shouldIgnoreNativeParkingDestroy(
+        _ token: WindowToken?, evidence: WindowDestroyEvidence
+    ) -> Bool {
+        NativeWindowParking.shouldPreserveDestroyedWindow(
+            evidence: evidence,
+            stillLive: token.map { controller?.nativeWindowParking.keepsAlive($0) == true } ?? false
+        )
     }
 
     private struct UnmanagedWindowDestruction {

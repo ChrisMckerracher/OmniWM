@@ -5,6 +5,12 @@ import AppKit
 
 @MainActor
 extension NativeWindowParking {
+    static func shouldPreserveDestroyedWindow(
+        evidence: AXEventHandler.WindowDestroyEvidence, stillLive: Bool
+    ) -> Bool {
+        evidence == .transientLifecycle && stillLive
+    }
+
     struct ParkingDesktop: Codable {
         var id: UInt64
         var uuid: String

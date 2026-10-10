@@ -95,6 +95,19 @@ final class NativeWindowParking {
         enabled && journal.windows.contains { $0.windowID == token.windowId && $0.pid == token.pid }
     }
 
+    /// A confirmed close can precede disappearance from WindowServer inventory.
+    /// It must not be recovered or kept alive as an off-desktop window.
+    func forgetClosedWindow(_ token: WindowToken) {
+        requestedSpaces.removeValue(forKey: token)
+        guard contains(token) else { return }
+        journal.windows.removeAll { $0.windowID == token.windowId && $0.pid == token.pid }
+        _ = save()
+        controller?.axManager.cancelPendingFrameJobs(
+            [(pid: token.pid, windowId: token.windowId)], reason: "native-parked-window-closed"
+        )
+        controller?.axManager.unsuppressFrameWrites([(pid: token.pid, windowId: token.windowId)])
+    }
+
     func keepsAlive(_ token: WindowToken) -> Bool {
         guard let record = journal.windows.first(where: { $0.windowID == token.windowId && $0.pid == token.pid }) else {
             return false

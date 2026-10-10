@@ -7,6 +7,18 @@ import XCTest
 
 @MainActor
 final class NativeWindowParkingTests: XCTestCase {
+    func testConfirmedCloseIsNotPreservedByLingeringWindowServerObject() {
+        XCTAssertFalse(NativeWindowParking.shouldPreserveDestroyedWindow(evidence: .windowClosed, stillLive: true))
+    }
+
+    func testParkingLifecycleDestroyPreservesAnExistingWindow() {
+        XCTAssertTrue(NativeWindowParking.shouldPreserveDestroyedWindow(evidence: .transientLifecycle, stillLive: true))
+        XCTAssertFalse(NativeWindowParking.shouldPreserveDestroyedWindow(
+            evidence: .transientLifecycle,
+            stillLive: false
+        ))
+    }
+
     func testRapidSwitchBackReparksDespiteStaleHiddenMembership() {
         XCTAssertTrue(NativeWindowParking.needsMove(actual: [9], requested: [1], target: [9]))
     }
