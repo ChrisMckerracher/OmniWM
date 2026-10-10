@@ -112,4 +112,30 @@ struct NativeWindowManagementBridge {
         }
         return submit(operation)
     }
+
+    /// Selecting a desktop alone does not change which desktops are visible.
+    func returnToDesktop(display: String, target: UInt64, parking: UInt64) -> Bool {
+        let initializer = "initWithDisplayIdentifier:spaceID:"
+        guard let allocated = allocate("SLSBridgedManagedDisplaySetCurrentSpaceOperation", initializer: initializer),
+              let show = initializeSpaces("SLSBridgedShowSpacesOperation", spaces: [target]),
+              let hide = initializeSpaces("SLSBridgedHideSpacesOperation", spaces: [parking]),
+              let message = Self.message
+        else { return false }
+        typealias Initialize = @convention(c) (AnyObject, Selector, NSString, UInt64) -> Unmanaged<AnyObject>?
+        guard let select = unsafeBitCast(message, to: Initialize.self)(
+            allocated, NSSelectorFromString(initializer), display as NSString, target
+        )?.takeUnretainedValue() as? NSObject else { return false }
+        return submit(show) && submit(select) && submit(hide)
+    }
+
+    private func initializeSpaces(_ name: String, spaces: [UInt64]) -> NSObject? {
+        let initializer = "initWithSpaces:"
+        guard let allocated = allocate(name, initializer: initializer), let message = Self.message else {
+            return nil
+        }
+        typealias Initialize = @convention(c) (AnyObject, Selector, NSArray) -> Unmanaged<AnyObject>?
+        return unsafeBitCast(message, to: Initialize.self)(
+            allocated, NSSelectorFromString(initializer), spaces.map { NSNumber(value: $0) } as NSArray
+        )?.takeUnretainedValue() as? NSObject
+    }
 }

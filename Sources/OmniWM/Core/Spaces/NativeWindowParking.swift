@@ -17,6 +17,8 @@ final class NativeWindowParking {
     private var deferredFocusTask: Task<Void, Never>?
     private var running = false
     private var restoringAll = false
+    private var desktopRecoveryPending = false
+    private var lastNormalSpaces: [String: UInt64] = [:]
     private let journalURL: URL
     let enabled: Bool
 
@@ -190,6 +192,9 @@ final class NativeWindowParking {
     @discardableResult
     func park(_ entry: WindowState, monitor: Monitor) -> Bool {
         guard enabled, running, !restoringAll else { return false }
+        // Do not fall back to clamped offscreen geometry while macOS is showing
+        // our parking desktop. A confirmed recovery schedules the full layout.
+        if recoverCurrentParkingDesktops() { return true }
         let displays = SkyLight.shared.managedSpaces()
         guard let parkingID = parkingDesktop(for: monitor, displays: displays) else { return false }
         if let index = journal.windows.firstIndex(where: { $0.windowID == entry.windowId && $0.pid == entry.pid }) {
@@ -229,6 +234,7 @@ final class NativeWindowParking {
 
     @discardableResult
     func reveal(_ token: WindowToken, monitor: Monitor? = nil) -> Bool {
+        if recoverCurrentParkingDesktops() { return false }
         guard let index = journal.windows.firstIndex(where: { $0.windowID == token.windowId && $0.pid == token.pid })
         else {
             return true
@@ -293,6 +299,7 @@ final class NativeWindowParking {
 
     func reconcile() {
         guard enabled, running, let controller else { return }
+        if recoverCurrentParkingDesktops() { return }
         var revealed = false
         for record in journal.windows {
             let token = WindowToken(pid: record.pid, windowId: Int(record.windowID))
@@ -311,6 +318,31 @@ final class NativeWindowParking {
         }
         cleanupDesktops()
         if revealed { controller.layoutRefreshController.requestRelayout(reason: .gapsChanged) }
+    }
+
+    @discardableResult
+    private func recoverCurrentParkingDesktops() -> Bool {
+        guard enabled, running, !restoringAll else { return false }
+        let recovery = NativeParkingDesktopRecovery { [bridge] display, target, parking in
+            bridge.returnToDesktop(display: display, target: target, parking: parking)
+        }
+        let displays = SkyLight.shared.managedSpaces()
+        for display in displays where !validatedDesktopIDs.contains(display.currentSpaceId)
+            && !display.fullscreenSpaceIds.contains(display.currentSpaceId)
+        {
+            lastNormalSpaces[display.displayIdentifier] = display.currentSpaceId
+        }
+        if recovery.recover(
+            displays: displays, parkingIDs: validatedDesktopIDs, normalSpaces: lastNormalSpaces
+        ) {
+            desktopRecoveryPending = true
+            return true
+        }
+        if desktopRecoveryPending {
+            desktopRecoveryPending = false
+            controller?.layoutRefreshController.requestRelayout(reason: .gapsChanged)
+        }
+        return false
     }
 }
 

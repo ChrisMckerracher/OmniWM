@@ -22,9 +22,11 @@ Closing or quitting the last application on an active workspace keeps that works
 selected and hands native focus to OmniWM. Pending activation results from the
 closing application cannot route focus to another workspace; later deliberate
 workspace and application selections still work. This applies to both layouts.
-The local macOS setup also disables automatic native Space switching with
-`defaults write -g AppleSpacesSwitchOnActivate -bool false`, preventing app fallback
-activation from automatically following a window into its parking desktop.
+macOS can still select the parking desktop when the last foreground app quits,
+even with `AppleSpacesSwitchOnActivate` disabled. Native parking reconciles that
+selection per display by showing a normal desktop, selecting it, and hiding the
+owned parking desktop before restoring windows. Window/workspace assignments do
+not change. Ordinary native desktops and fullscreen spaces are not redirected.
 Recovery uses ownership markers, desktop UUIDs, window PID/ID, boot identity and
 an atomic journal at `~/.local/state/omniwm-native-parking.json`. Do not delete that
 journal while windows are parked. Stop/restart restores memberships; startup also
