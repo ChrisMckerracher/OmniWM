@@ -8,6 +8,23 @@ import OmniWMIPC
 import XCTest
 
 final class GapSettingsTests: XCTestCase {
+    func testFullscreenTopExtensionClosesOnePointBarSeamAndKeepsBottomFixed() {
+        let monitor = Monitor(
+            id: Monitor.ID(displayId: 91), displayId: 91,
+            frame: CGRect(x: 0, y: 0, width: 1470, height: 956),
+            visibleFrame: CGRect(x: 0, y: 0, width: 1470, height: 923),
+            hasNotch: true, name: "Built-in Retina Display"
+        )
+        XCTAssertEqual(
+            fullscreenVisibleFrame(for: monitor, topExtension: 1),
+            CGRect(x: 0, y: 0, width: 1470, height: 924)
+        )
+        XCTAssertEqual(fullscreenVisibleFrame(for: monitor, topExtension: 0), monitor.visibleFrame)
+        XCTAssertEqual(fullscreenVisibleFrame(for: monitor, topExtension: -1), monitor.visibleFrame)
+        XCTAssertEqual(fullscreenVisibleFrame(for: monitor, topExtension: .nan), monitor.visibleFrame)
+        XCTAssertEqual(fullscreenVisibleFrame(for: monitor, topExtension: 100), monitor.frame)
+    }
+
     func testNormalizedTopStrutMeasuresFromPhysicalTop() {
         XCTAssertEqual(normalizedTopStrut(top: 46, menuBarInset: 33, reservedTopInset: 0), 13)
         XCTAssertEqual(normalizedTopStrut(top: 46, menuBarInset: 0, reservedTopInset: 0), 46)

@@ -1,5 +1,24 @@
 # OmniWM
 
+This local fork is managed in `~/Code/OmniWM`, on branch `chris/desktop-fixes`,
+based on upstream `v0.7.6` (`3c0783954604eaa9110d0bdb61fa29f953e738ee`).
+The remote `upstream` points to the original project.
+
+Local desktop options (set in the app's launch environment):
+
+- `OMNIWM_HIDE_EDGE_MASKS=1` prevents the black one-point edge masks from being created.
+- `OMNIWM_FULLSCREEN_TOP_EXTENSION=1` extends gapless layout fullscreen upward
+  by one point, closing the seam between macOS's 33-point reservation and the
+  32-point custom bar. The bottom stays fixed; ordinary tiling is unaffected.
+  The extension is capped at the physical display edge and is skipped when
+  OmniWM's workspace bar reserves space at the top.
+
+Without these options the fork uses upstream behavior. Disabling masks can expose
+slivers of parked windows at screen edges. Formatting and lint checks pass (lint reports two existing upstream warnings).
+Building is currently blocked by missing Xcode 27 compiler plugins in the
+standalone Command Line Tools; the app is not yet built or installed.
+Only the dependencies pinned by this checkout were downloaded and verified.
+
 OmniWM is a free, open-source, Developer ID-signed and Apple-notarized tiling window manager for Apple Silicon Macs running macOS 26 or later. It combines Niri-style orientation-aware scrolling containers and Hyprland-style Dwindle BSP layouts, selectable per workspace, with multi-monitor routing and optional local CLI/IPC automation.
 
 **[Website](https://omniwm.app)** · **[Documentation](https://omniwm.app/guides/quick-start/)** · **[Install](https://omniwm.app/guides/install/)** · **[Compatibility](https://omniwm.app/help/known-limitations/)**

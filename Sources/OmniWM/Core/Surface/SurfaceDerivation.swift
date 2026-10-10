@@ -26,8 +26,10 @@ enum SurfaceDerivation {
 
     static func deriveParkingEdgeMasks(
         monitors: [Monitor],
-        spaceTopology: SpaceTopology
+        spaceTopology: SpaceTopology,
+        enabled: Bool = ProcessInfo.processInfo.environment["OMNIWM_HIDE_EDGE_MASKS"] != "1"
     ) -> [DesiredParkingEdgeMask] {
+        guard enabled else { return [] }
         let width: CGFloat = 1
         var masks: [DesiredParkingEdgeMask] = []
         masks.reserveCapacity(monitors.count * 2)

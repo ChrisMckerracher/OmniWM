@@ -5,6 +5,20 @@
 import XCTest
 
 final class ParkingEdgeMaskTests: XCTestCase {
+    func testDisabledMasksAreAbsentOnDesktop() {
+        let monitor = makeMonitor(
+            displayId: 91,
+            frame: CGRect(x: 0, y: 0, width: 1470, height: 956),
+            visibleFrame: CGRect(x: 0, y: 0, width: 1470, height: 923)
+        )
+        XCTAssertTrue(SurfaceDerivation.deriveParkingEdgeMasks(
+            monitors: [monitor], spaceTopology: .init(), enabled: false
+        ).isEmpty)
+        XCTAssertEqual(SurfaceDerivation.deriveParkingEdgeMasks(
+            monitors: [monitor], spaceTopology: .init(), enabled: true
+        ).count, 2)
+    }
+
     func testDerivesOnePointMasksFromVisibleFrame() throws {
         let visibleFrame = CGRect(x: -1900, y: -40, width: 1840, height: 1010)
         let monitor = makeMonitor(

@@ -182,13 +182,20 @@ extension WMController {
         reserved: Struts,
         clearance: CGFloat
     ) -> (layout: CGRect, borderSafe: CGRect) {
+        let requestedExtension = Double(
+            ProcessInfo.processInfo.environment["OMNIWM_FULLSCREEN_TOP_EXTENSION"] ?? "0"
+        ) ?? 0
+        let visibleFrame = fullscreenVisibleFrame(
+            for: monitor,
+            topExtension: reserved.top == 0 ? CGFloat(requestedExtension) : 0
+        )
         let layout = computeWorkingArea(
-            parentArea: monitor.visibleFrame,
+            parentArea: visibleFrame,
             scale: scale,
             struts: reserved
         )
         let borderSafe = computeWorkingArea(
-            parentArea: monitor.visibleFrame,
+            parentArea: visibleFrame,
             scale: scale,
             struts: Struts(
                 left: max(reserved.left, clearance),
@@ -199,4 +206,12 @@ extension WMController {
         )
         return (layout, borderSafe)
     }
+}
+
+func fullscreenVisibleFrame(for monitor: Monitor, topExtension: CGFloat) -> CGRect {
+    var frame = monitor.visibleFrame
+    guard topExtension.isFinite, topExtension > 0 else { return frame }
+    let available = max(0, monitor.frame.maxY - frame.maxY)
+    frame.size.height += min(topExtension, available)
+    return frame
 }
