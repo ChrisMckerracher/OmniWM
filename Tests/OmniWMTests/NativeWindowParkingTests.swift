@@ -7,6 +7,20 @@ import XCTest
 
 @MainActor
 final class NativeWindowParkingTests: XCTestCase {
+    func testRapidSwitchBackReparksDespiteStaleHiddenMembership() {
+        XCTAssertTrue(NativeWindowParking.needsMove(actual: [9], requested: [1], target: [9]))
+    }
+
+    func testRapidSwitchBackRevealsDespiteStaleVisibleMembership() {
+        XCTAssertTrue(NativeWindowParking.needsMove(actual: [1], requested: [9], target: [1]))
+    }
+
+    func testConfirmedDestinationDoesNotQueueAnotherMove() {
+        XCTAssertFalse(NativeWindowParking.needsMove(actual: [9], requested: [9], target: [9]))
+        XCTAssertFalse(NativeWindowParking.needsMove(actual: [1], requested: nil, target: [1]))
+        XCTAssertTrue(NativeWindowParking.needsMove(actual: [1], requested: [9], target: [9]))
+    }
+
     private func display(
         _ name: String,
         spaces: [UInt64],

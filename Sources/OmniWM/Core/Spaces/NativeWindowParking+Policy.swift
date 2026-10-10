@@ -26,6 +26,11 @@ extension NativeWindowParking {
         var windows: [ParkedWindow] = []
     }
 
+    /// The observed membership can lag an opposite move already queued in macOS.
+    static func needsMove(actual: Set<UInt64>, requested: Set<UInt64>?, target: Set<UInt64>) -> Bool {
+        actual != target || (requested != nil && requested != target)
+    }
+
     static func restorationSpaces(
         for record: ParkedWindow, targetDisplay: String?, displays: [ManagedDisplaySpaces],
         parkingIDs: Set<UInt64>, targetIdentity: String? = nil

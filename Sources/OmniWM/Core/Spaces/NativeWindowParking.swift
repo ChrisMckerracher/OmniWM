@@ -12,6 +12,7 @@ final class NativeWindowParking {
     private let bridge = NativeWindowManagementBridge()
     private var journal = Journal()
     private var validatedDesktopIDs: Set<UInt64> = []
+    private var requestedSpaces: [WindowToken: Set<UInt64>] = [:]
     private var retryTask: Task<Void, Never>?
     private var deferredFocusTask: Task<Void, Never>?
     private var running = false
@@ -217,7 +218,13 @@ final class NativeWindowParking {
         )
         controller?.axManager.suppressFrameWrites([(pid: token.pid, windowId: token.windowId)])
         let actual = SkyLight.shared.spacesForWindow(UInt32(entry.windowId))
-        return actual == [parkingID] || bridge.moveWindow(UInt32(entry.windowId), to: parkingID)
+        let target: Set<UInt64> = [parkingID]
+        guard Self.needsMove(actual: Set(actual), requested: requestedSpaces[token], target: target) else {
+            return true
+        }
+        guard bridge.moveWindow(UInt32(entry.windowId), to: parkingID) else { return false }
+        requestedSpaces[token] = target
+        return true
     }
 
     @discardableResult
@@ -235,9 +242,12 @@ final class NativeWindowParking {
         let targets = restorationSpaces(for: record, monitor: monitor, displays: SkyLight.shared.managedSpaces())
         guard let first = targets.first else { return false }
         let actual = SkyLight.shared.spacesForWindow(record.windowID)
-        if Set(actual) != Set(targets) {
-            _ = bridge.moveWindow(record.windowID, to: first)
-            if targets.count > 1 { _ = bridge.addWindow(record.windowID, to: Array(targets.dropFirst())) }
+        let target = Set(targets)
+        if Self.needsMove(actual: Set(actual), requested: requestedSpaces[token], target: target) {
+            guard bridge.moveWindow(record.windowID, to: first) else { return false }
+            if targets.count > 1,
+               !bridge.addWindow(record.windowID, to: Array(targets.dropFirst())) { return false }
+            requestedSpaces[token] = target
             return false
         }
         if controller?.workspaceManager.entry(for: token) == nil, var frame = record.originalFrame {
@@ -256,6 +266,17 @@ final class NativeWindowParking {
         controller?.axManager.unsuppressFrameWrites([(pid: token.pid, windowId: token.windowId)])
         controller?.axManager.forceApplyNextFrame(for: token.windowId)
         return true
+    }
+
+    func parkInactiveWindows() {
+        guard enabled, running, !restoringAll, let controller else { return }
+        for entry in controller.workspaceManager.allEntries() {
+            guard entry.layoutReason != .nativeFullscreen,
+                  let monitor = controller.workspaceManager.monitor(for: entry.workspaceId),
+                  controller.workspaceManager.activeWorkspaceOrFirst(on: monitor.id)?.id != entry.workspaceId
+            else { continue }
+            _ = park(entry, monitor: monitor)
+        }
     }
 
     func revealActiveWindows() {

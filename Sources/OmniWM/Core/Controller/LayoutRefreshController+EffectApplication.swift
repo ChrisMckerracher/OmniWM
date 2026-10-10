@@ -40,6 +40,7 @@ extension LayoutRefreshController {
     }
 
     func applyEffectPlan(_ plan: EffectPlan, controller: WMController) {
+        controller.nativeWindowParking.parkInactiveWindows()
         controller.nativeWindowParking.revealActiveWindows()
         var currentEffectActiveWorkspaceIds: Set<WorkspaceDescriptor.ID>?
         if plan.effects.visibility != nil {
