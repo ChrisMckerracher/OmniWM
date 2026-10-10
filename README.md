@@ -6,7 +6,9 @@ The remote `upstream` points to the original project.
 
 Local desktop options (set in the app's launch environment):
 
-- `OMNIWM_HIDE_EDGE_MASKS=1` prevents the black one-point edge masks from being created.
+- `OMNIWM_HIDE_EDGE_MASKS=1` prevents the black one-point edge masks from being created
+  and requests hidden-window parking 32 points beyond either edge, clearing slivers
+  and shadows when macOS honors the requested placement.
 - `OMNIWM_FULLSCREEN_TOP_EXTENSION=1` extends gapless layout fullscreen upward
   by one point, closing the seam between macOS's 33-point reservation and the
   32-point custom bar. The bottom stays fixed; ordinary tiling is unaffected.
@@ -32,7 +34,9 @@ display. Logs are in `.cache/verify.log`, `.cache/tests.log`, and
 
 The original app, settings, startup script and launch agent are backed up in
 `~/.local/state/omniwm-local-backup-20261010-092132`.
-Runtime visual confirmation is pending permission approval.
+Homebrew cask ownership was removed on 2026-10-10; the local app and CLI link
+were retained. The startup LaunchAgent opens the self-managed build.
+The updated off-screen parking behavior is awaiting runtime verification.
 
 OmniWM is a free, open-source, Developer ID-signed and Apple-notarized tiling window manager for Apple Silicon Macs running macOS 26 or later. It combines Niri-style orientation-aware scrolling containers and Hyprland-style Dwindle BSP layouts, selectable per workspace, with multi-monitor routing and optional local CLI/IPC automation.
 

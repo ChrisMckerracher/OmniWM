@@ -7,6 +7,24 @@ import Foundation
 import XCTest
 
 final class HiddenWindowRevealTests: XCTestCase {
+    func testMasklessParkingClearsBothDisplayEdgesAndWindowShadows() {
+        let display = HiddenPlacementMonitorContext(
+            id: Monitor.ID(displayId: 91),
+            frame: CGRect(x: 0, y: 0, width: 1470, height: 956),
+            visibleFrame: CGRect(x: 0, y: 0, width: 1470, height: 923)
+        )
+        let resolver = HiddenWindowPlacementResolver(monitor: display, monitors: [display])
+        let size = CGSize(width: 1450, height: 904)
+        for edge in [AxisHideEdge.minimum, .maximum] {
+            let frame = resolver.placement(
+                for: size, requestedEdge: edge, orthogonalOrigin: 10,
+                baseReveal: 1, orientation: .horizontal, hideEdgeMasks: true
+            ).frame(for: size)
+            XCTAssertFalse(frame.insetBy(dx: -31, dy: -31).intersects(display.frame))
+            XCTAssertEqual(edge == .minimum ? frame.maxX : frame.minX, edge == .minimum ? -32 : 1502)
+        }
+    }
+
     private let monitor = HiddenPlacementMonitorContext(
         id: Monitor.ID(displayId: 900_100),
         frame: CGRect(x: 0, y: 0, width: 1800, height: 1169),

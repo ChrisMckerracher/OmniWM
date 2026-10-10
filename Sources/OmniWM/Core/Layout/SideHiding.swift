@@ -80,8 +80,12 @@ struct HiddenWindowPlacementResolver {
         self.monitors = monitors
     }
 
-    static func effectiveReveal(baseReveal: CGFloat) -> CGFloat {
-        baseReveal > 0 ? 1 : 0
+    static func effectiveReveal(
+        baseReveal: CGFloat,
+        hideEdgeMasks: Bool = ProcessInfo.processInfo.environment["OMNIWM_HIDE_EDGE_MASKS"] == "1"
+    ) -> CGFloat {
+        if hideEdgeMasks, baseReveal > 0 { return -32 }
+        return baseReveal > 0 ? 1 : 0
     }
 
     func placement(
@@ -89,9 +93,10 @@ struct HiddenWindowPlacementResolver {
         requestedEdge: AxisHideEdge,
         orthogonalOrigin: CGFloat,
         baseReveal: CGFloat,
-        orientation: Monitor.Orientation
+        orientation: Monitor.Orientation,
+        hideEdgeMasks: Bool = ProcessInfo.processInfo.environment["OMNIWM_HIDE_EDGE_MASKS"] == "1"
     ) -> HiddenWindowPlacement {
-        let reveal = Self.effectiveReveal(baseReveal: baseReveal)
+        let reveal = Self.effectiveReveal(baseReveal: baseReveal, hideEdgeMasks: hideEdgeMasks)
         let primaryOrigin = origin(
             for: requestedEdge,
             size: size,
